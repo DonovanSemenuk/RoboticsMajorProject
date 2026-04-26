@@ -49,6 +49,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'nav_node = tour_guide.navnode:main',
         ],
     },
 )
