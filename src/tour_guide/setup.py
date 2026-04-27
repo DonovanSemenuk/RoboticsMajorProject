@@ -50,6 +50,8 @@ setup(
     entry_points={
         'console_scripts': [
             'nav_node = tour_guide.navnode:main',
+            'tour_node = tour_guide.tour_node:main',
+            'selection = tour_guide.selection:main',
         ],
     },
 )
