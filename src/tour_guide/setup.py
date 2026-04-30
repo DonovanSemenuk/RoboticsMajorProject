@@ -5,7 +5,7 @@ package_name = 'tour_guide'
 
 setup(
     name=package_name,
-    version='0.0.0',
+    version='0.1.0',
     packages=find_packages(exclude=['test']),
     data_files=[
         ('share/ament_index/resource_index/packages',
@@ -13,6 +13,8 @@ setup(
         ('share/' + package_name, ['package.xml']),
         ('share/' + package_name + '/launch',
             glob('launch/*.py')),
+        ('share/' + package_name + '/config',
+            glob('config/*.yaml')),
         ('share/' + package_name + '/worlds',
             glob('worlds/*')),
         ('share/' + package_name + '/maps',
@@ -40,18 +42,19 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='bryanltran',
-    maintainer_email='bryan.l.tran-1@ou.edu',
-    description='TODO: Package description',
-    license='TODO: License declaration',
+    maintainer='Donovan Semenuk',
+    maintainer_email='donovansemenuk@icloud.com',
+    description='Autonomous landmark-based tour guide for the OU TurtleBot 4.',
+    license='MIT',
     extras_require={
         'test': ['pytest'],
     },
     entry_points={
         'console_scripts': [
-            'nav_node = tour_guide.navnode:main',
-            'tour_node = tour_guide.tour_node:main',
+            'landmark_recorder = tour_guide.landmark_recorder:main',
+            'sweep_node = tour_guide.sweep_node:main',
             'selection = tour_guide.selection:main',
+            'tour_node = tour_guide.tour_node:main',
         ],
     },
 )

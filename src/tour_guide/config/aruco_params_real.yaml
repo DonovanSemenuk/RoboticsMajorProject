@@ -1,0 +1,9 @@
+/aruco_node:
+  ros__parameters:
+    # Side length of the printed black square on each ArUco marker, in meters.
+    # Measure your printed markers and update this if it differs.
+    marker_size: 0.10
+    aruco_dictionary_id: DICT_4X4_50
+    image_topic: /oakd/rgb/preview/image_raw
+    camera_info_topic: /oakd/rgb/preview/camera_info
+    camera_frame: oakd_rgb_camera_optical_frame

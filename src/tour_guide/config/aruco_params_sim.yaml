@@ -1,0 +1,9 @@
+/aruco_node:
+  ros__parameters:
+    # Markers in the simulated tour_world are 0.3 m on a side.
+    marker_size: 0.3
+    # Matches the dictionary used for the marker textures in models/aruco_marker_*.
+    aruco_dictionary_id: DICT_4X4_50
+    image_topic: /oakd/rgb/preview/image_raw
+    camera_info_topic: /oakd/rgb/preview/camera_info
+    camera_frame: oakd_rgb_camera_optical_frame

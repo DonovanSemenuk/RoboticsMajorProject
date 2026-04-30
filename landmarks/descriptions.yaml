@@ -1,0 +1,18 @@
+# Per-marker tour commentary, merged into the landmark map at tour time.
+# Edit this file by hand; the recorder will not touch it.
+#
+# `name` is shown in the menu and spoken by the robot at arrival;
+# `description` is read aloud as the commentary.
+descriptions:
+  - id: 0
+    name: "Reception Desk"
+    description: "Welcome to the building. This is the main reception desk where visitors check in."
+  - id: 1
+    name: "Conference Room"
+    description: "On your left is the conference room, used for team meetings and presentations."
+  - id: 2
+    name: "Engineering Lab"
+    description: "This is the engineering lab. Most of our prototype hardware lives here."
+  - id: 3
+    name: "Exit"
+    description: "And here is the exit. Thank you for taking the tour."

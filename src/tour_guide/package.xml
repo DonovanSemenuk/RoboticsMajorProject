@@ -2,10 +2,10 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>tour_guide</name>
-  <version>0.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="bryan.l.tran-1@ou.edu">bryanltran</maintainer>
-  <license>TODO: License declaration</license>
+  <version>0.1.0</version>
+  <description>Autonomous landmark-based tour guide for the OU TurtleBot 4.</description>
+  <maintainer email="donovansemenuk@icloud.com">Donovan Semenuk</maintainer>
+  <license>MIT</license>
 
   <depend>rclpy</depend>
   <depend>geometry_msgs</depend>
@@ -15,6 +15,7 @@
   <depend>tf2_ros</depend>
   <depend>tf2_geometry_msgs</depend>
   <depend>python3-yaml</depend>
+  <depend>ros2_aruco_interfaces</depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

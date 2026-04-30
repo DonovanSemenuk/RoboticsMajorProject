@@ -1,0 +1,14 @@
+# Sweep waypoints for autonomous coverage during the landmark-discovery phase.
+# The robot drives to each (x, y) and rotates 360 deg in place so the camera
+# can see markers in every direction. Coordinates are in the map frame.
+#
+# Edit these to cover the area your demo runs in. The defaults are tuned for
+# the simulated tour_world; replace with values matched to the cardboard-city
+# map for hardware demos.
+waypoints:
+  - { x: 1.0, y: 1.0 }
+  - { x: 2.5, y: 1.0 }
+  - { x: 2.5, y: 3.0 }
+  - { x: 1.0, y: 3.0 }
+  - { x: 1.0, y: 5.0 }
+  - { x: 2.5, y: 5.0 }
