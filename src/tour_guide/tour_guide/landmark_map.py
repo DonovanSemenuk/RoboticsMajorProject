@@ -11,7 +11,7 @@ overwriting locations.yaml without trampling hand-written tour commentary.
 from dataclasses import dataclass, field, asdict
 from pathlib import Path
 from typing import Dict, List, Optional
-from tour_guide import yaml_io
+import yaml
 
 
 @dataclass
@@ -34,7 +34,7 @@ def load_landmarks(path: str) -> List[Landmark]:
         raise FileNotFoundError(f"Landmark file not found: {path}")
 
     with open(p, "r") as f:
-        data = yaml_io.safe_load(f) or {}
+        data = yaml.safe_load(f) or {}
 
     raw = data.get("landmarks", [])
     landmarks = []
@@ -58,7 +58,7 @@ def save_landmarks(path: str, landmarks: List[Landmark]) -> None:
         for lm in landmarks
     ]}
     with open(p, "w") as f:
-        yaml_io.safe_dump(payload, f, sort_keys=False)
+        yaml.safe_dump(payload, f, sort_keys=False)
 
 
 def load_descriptions(path: str) -> Dict[int, Dict[str, str]]:
@@ -70,7 +70,7 @@ def load_descriptions(path: str) -> Dict[int, Dict[str, str]]:
     if not p.exists():
         return {}
     with open(p, "r") as f:
-        data = yaml_io.safe_load(f) or {}
+        data = yaml.safe_load(f) or {}
     out: Dict[int, Dict[str, str]] = {}
     for entry in data.get("descriptions", []):
         mid = int(entry["id"])
