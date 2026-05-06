@@ -1,0 +1,135 @@
+\documentclass[12pt]{article}
+
+\usepackage[english]{babel}
+\usepackage[letterpaper,top=2.5cm,bottom=2.5cm,left=3cm,right=3cm]{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{graphicx}
+\usepackage{setspace}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+\usepackage{titlesec}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\titleformat{\section}{\large\bfseries}{}{0em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{}{0em}{}
+\titleformat{\subsubsection}{\normalsize\itshape}{}{0em}{}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.4em}
+
+\newcommand{\fillin}[1]{\textcolor{red}{\textbf{[FILL IN: #1]}}}
+
+\title{\textbf{Relocatable Landmark Discovery and Tour Execution for a TurtleBot 4 Robot Guide}}
+\author{Bryan Tran, Donovan Semenuk}
+\date{May 2026}
+
+\begin{document}
+\maketitle
+
+\section*{Abstract}
+Guiding a mobile robot through a dynamic tour environment is difficult when points of interest move but the software assumes a fixed waypoint map. This problem is worth studying because classrooms and demonstration spaces are frequently reconfigured, so a useful tour guide should adapt without requiring a programmer to edit coordinates by hand. We developed a hybrid ROS~2 tour-guide system for the TurtleBot~4 that uses Nav2 for navigation, the OAK-D camera with ArUco markers for landmark detection, an autonomous sweep behavior to build a landmark map, an operator route-selection interface, route optimization, and optional spoken commentary. In simulation, the robot was brought up in a Gazebo Harmonic world with four ArUco landmarks and a pre-built occupancy map; the implemented software can record landmark locations, merge them with descriptions, and execute a selected tour route. These results support the conclusion that relocatable fiducial landmarks are a practical deliberative layer for a robot tour-guide mission, although final claims about reliability and accuracy should be based on the physical TurtleBot~4 trials described in the testing plan.
+
+\section*{Introduction}
+A robot tour guide must combine reliable low-level navigation with higher-level decisions about what locations to visit, in what order, and what information to present at each stop. Classical tour-guide robots such as RHINO and MINERVA demonstrated that autonomous mobile robots can interact with visitors in public spaces, but they also showed that robust tour behavior depends on careful integration of mapping, localization, planning, and user interaction \cite{burgard1999rhino,thrun1999minerva}. Modern ROS~2 systems make the navigation portion more reusable through Nav2, which provides localization, planning, control, recovery behaviors, and waypoint navigation capabilities \cite{macenski2020marathon2}.
+
+The specific challenge addressed in this project is landmark flexibility. A normal waypoint tour stores fixed map coordinates for every destination. That approach works in a permanent museum exhibit, but it is inconvenient for the REPF B4 demonstration environment because cardboard walls, desks, chairs, and marked points of interest can be moved between trials. Instead of treating tour stops as hard-coded coordinates, our system treats ArUco markers as physical labels for tour destinations. ArUco markers are inexpensive visual fiducials that can be detected by a camera and assigned unique IDs \cite{opencv_aruco}. When a marker moves, the operator can run the discovery phase again and the robot reconstructs the landmark map automatically.
+
+The software follows a hybrid architecture. Reactive and continuous navigation responsibilities remain with the TurtleBot~4 platform, localization, laser-based obstacle avoidance, and Nav2. The original deliberative layer added by this project decides how to discover landmarks, stores a reusable landmark map, lets a human select desired tour stops, optionally optimizes the route order, and commands the robot to execute the selected tour. This separation keeps the project realistic for a half-semester robotics project while still adding meaningful autonomy beyond teleoperation or fixed waypoint playback.
+
+\section*{Approach and Methods}
+\subsection*{System overview}
+The project is implemented as a ROS~2 workspace targeted at the OU TurtleBot~4 and Gazebo Harmonic. The main package, \texttt{tour\_guide}, is organized around three phases:
+\begin{enumerate}
+    \item \textbf{Discovery phase:} an autonomous sweep node drives through configured map-frame waypoints and rotates at each waypoint so the OAK-D camera can view the room from multiple headings.
+    \item \textbf{Landmark mapping phase:} the ArUco detector publishes marker detections; the landmark recorder transforms marker poses into the map frame and writes stable landmark estimates to YAML.
+    \item \textbf{Tour phase:} the tour node loads the recorded landmark map, merges hand-written names and descriptions, prompts the operator for a route, optionally optimizes the route, and commands Nav2 to visit each stop.
+\end{enumerate}
+
+\subsection*{Sensors and software}
+The robot uses the standard TurtleBot~4 sensor suite without hardware modification. Laser scan and odometry data are used by the base navigation and localization stack. The OAK-D RGB-D camera is used for ArUco marker detection through the \texttt{ros2\_aruco} package, which wraps OpenCV's ArUco detector for ROS~2 \cite{ros2_aruco}. The project keeps tour commentary in a separate YAML file so that automatic discovery can overwrite measured coordinates without deleting human-authored landmark descriptions.
+
+\subsection*{Landmark estimation}
+For each ArUco marker detection, the recorder looks up a transform from the camera frame to the map frame and transforms the detected marker pose into the global map frame. Each marker ID maintains an incremental average of position and a circular average of yaw. A marker is only written to the map after a minimum number of observations, reducing the chance that a single noisy detection becomes a tour stop. The recorded YAML contains marker ID, position, yaw, and an optional display name.
+
+\subsection*{Route selection and optimization}
+The route-selection interface presents detected landmarks as a numbered menu. The operator enters a comma-separated sequence of landmark indices such as \texttt{0,2,1}. The system computes the Euclidean length of the requested order and compares it with an optimized order. For up to eight selected landmarks, all permutations are evaluated to find the shortest route from the robot's initial position. For larger routes, the software uses a nearest-neighbor heuristic to avoid factorial runtime. The operator can accept the optimized order, keep the original order, or reselect the route.
+
+\subsection*{Launch workflow}
+The intended simulation workflow is:
+\begin{enumerate}
+    \item Start the TurtleBot~4 simulation, world, map, and Nav2 launch file.
+    \item Run the discovery launch file to start ArUco detection, landmark recording, and sweep behavior.
+    \item Inspect \texttt{landmarks/locations.yaml} and adjust \texttt{landmarks/descriptions.yaml} if needed.
+    \item Run the tour launch file and select the tour route at the prompt.
+\end{enumerate}
+The same high-level workflow applies on the physical robot, except that the real TurtleBot~4 bringup and map for the cardboard-city environment replace the Gazebo simulation. If Nav2 goal execution is unreliable during the hardware demonstration, the project also includes a direct hardware tour driver adapted from the team's working Project~2 controller patterns: stamped velocity commands on \texttt{/cmd\_vel}, odometry yaw feedback, \texttt{/scan} safety halts, and \texttt{/cmd\_vel\_key} keyboard override priority \cite{project2_controller}.
+
+\section*{Results}
+At the draft-report stage, the simulation environment had been established. The TurtleBot~4 was successfully spawned in a custom Gazebo Harmonic world representing the target tour environment, Nav2 was configured to localize against a pre-built occupancy grid map, and four ArUco markers from the \texttt{DICT\_4X4\_50} dictionary were placed on simulated walls where the OAK-D camera can observe them. The project also includes a real-world landmark map and editable descriptions for four tour stops: Reception Desk, Conference Room, Engineering Lab, and Exit.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lrrrr}
+\toprule
+Test condition & Trials & Successes & Mean time (s) & Notes \\
+\midrule
+Simulation discovery sweep & \fillin{n} & \fillin{n} & \fillin{mean $\pm$ sd} & \fillin{marker IDs found} \\
+Simulation tour execution & \fillin{n} & \fillin{n} & \fillin{mean $\pm$ sd} & \fillin{collisions/recoveries} \\
+Physical discovery sweep & \fillin{n} & \fillin{n} & \fillin{mean $\pm$ sd} & \fillin{lighting/occlusion notes} \\
+Physical tour execution & \fillin{n} & \fillin{n} & \fillin{mean $\pm$ sd} & \fillin{navigation notes} \\
+\bottomrule
+\end{tabular}
+\caption{Recommended summary table for final measured results. Replace each fill-in with data from repeated trials.}
+\end{table}
+
+The pure Python components were tested with unit tests for landmark-map loading, description merging, selection parsing, route-length calculation, route optimization, interactive route-selection behavior, and the small YAML subset used by project configuration files. A lightweight project YAML helper keeps these tests runnable in minimal Python environments, while the ROS~2 deployment can still use standard YAML files produced by the same format.
+
+\section*{Discussion}
+The project's main strength is that it separates stable navigation infrastructure from flexible tour semantics. Nav2 remains responsible for local planning and obstacle avoidance, while the tour-guide package decides which landmarks matter and how to visit them. This design directly supports the assignment's requirement for a deliberative or hybrid architecture because landmark discovery, map construction, route selection, and route optimization occur above the low-level controller.
+
+The ArUco-based approach is also practical for the REPF B4 environment. Markers can be printed, attached to cardboard walls or furniture, and moved when the tour layout changes. Re-running the discovery sweep is faster and less error-prone than manually measuring and editing map coordinates. However, the approach depends on line of sight, adequate lighting, and marker size. If a marker is too small, angled too far away from the camera, or blocked by people or furniture, the recorder may fail to collect the minimum number of observations.
+
+The expected difference between simulation and physical trials is sensor realism. In simulation, marker visibility and camera images are more predictable, and localization errors are usually smaller. On the physical TurtleBot~4, carpet, lighting, wheel slip, marker glare, and imperfect map alignment can reduce detection consistency and navigation accuracy. These differences should be discussed quantitatively in the final report by comparing discovery success rate, landmark position repeatability, route completion rate, and time to complete the route across repeated simulation and real-robot trials.
+
+\section*{Conclusions}
+This project demonstrates a feasible hybrid software architecture for a TurtleBot~4 tour guide that uses relocatable ArUco markers as tour destinations. The implemented system provides an original deliberative layer for discovery, landmark-map maintenance, route selection, route optimization, and tour execution while relying on standard TurtleBot~4 sensors and ROS~2 navigation software for localization and motion. Based on the completed software and simulation bringup, it is reasonable to conclude that fiducial landmarks can reduce the maintenance burden of fixed waypoint tours. Stronger conclusions about robustness, timing, and real-world accuracy require the repeated physical trials summarized in the Results section.
+
+\section*{Future Work}
+Several extensions could improve the system. First, the robot could use a conversational or web-based interface instead of a terminal prompt so visitors can choose stops more naturally. Second, the system could store richer per-landmark media, such as longer spoken descriptions, images, or QR-code links. Third, the discovery phase could be improved with active perception: if too few observations are collected for a marker, the robot could deliberately reposition for a better viewing angle. Fourth, the tour planner could include obstacle-aware path costs from Nav2 instead of Euclidean distance. Finally, multiple robots could coordinate tours by reserving landmarks or time windows to avoid congestion.
+
+\section*{Bibliography}
+\bibliographystyle{ieeetr}
+\bibliography{references}
+
+\newpage
+\section*{Appendix A: Source Code and Configuration Inventory}
+The main project package is \texttt{src/tour\_guide}. The most important source files are:
+\begin{itemize}
+    \item \texttt{tour\_guide/landmark\_recorder.py}: subscribes to ArUco detections, transforms marker poses into the map frame, averages observations, and writes \texttt{locations.yaml}.
+    \item \texttt{tour\_guide/sweep\_node.py}: drives through configured sweep waypoints and rotates at each point.
+    \item \texttt{tour\_guide/selection.py}: provides the landmark menu, input parsing, route-length calculation, and route optimization.
+    \item \texttt{tour\_guide/tour\_node.py}: loads landmarks and descriptions, asks for the tour route, sends goals to Nav2, and speaks commentary.
+    \item \texttt{tour\_guide/hardware\_tour\_node.py}: hardware fallback that drives through the selected route using odometry, stamped velocity commands, lidar safety stops, and keyboard override priority.
+    \item \texttt{launch/discover.launch.py}: launches marker detection, landmark recording, and sweeping.
+    \item \texttt{launch/tour.launch.py}: launches marker visualization and tour execution.
+    \item \texttt{worlds/tour\_world.sdf}: custom Gazebo Harmonic world with ArUco marker models.
+\end{itemize}
+
+\section*{Appendix B: Team Contributions}
+\textbf{Bryan Tran:}
+\begin{enumerate}
+    \item Designed and built the simulation environment in Gazebo Harmonic, including custom world SDF, ArUco marker models with textures, and integration of the \texttt{tour\_guide} ROS~2 package.
+    \item Configured and launched the Nav2 stack with the TurtleBot~4 simulator, including localization against a pre-built occupancy map.
+    \item Set up the \texttt{ros2\_aruco} detection pipeline and resolved dependency and Python environment issues for ROS~2 compatibility.
+\end{enumerate}
+
+\textbf{Donovan Semenuk:}
+\begin{enumerate}
+    \item Implemented and tested the landmark-map data model, YAML I/O, description merging, and route-selection utilities.
+    \item Implemented the autonomous sweep, landmark-recorder, tour-execution, and commentary nodes.
+    \item Added launch files, configuration files, unit tests, and documentation for discovery and tour execution.
+\end{enumerate}
+
+\end{document}

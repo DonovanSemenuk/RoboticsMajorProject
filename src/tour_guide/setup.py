@@ -55,6 +55,7 @@ setup(
             'sweep_node = tour_guide.sweep_node:main',
             'selection = tour_guide.selection:main',
             'tour_node = tour_guide.tour_node:main',
+            'hardware_tour_node = tour_guide.hardware_tour_node:main',
         ],
     },
 )
