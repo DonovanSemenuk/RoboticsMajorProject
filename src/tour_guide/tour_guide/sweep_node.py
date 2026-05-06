@@ -14,7 +14,7 @@ import sys
 from pathlib import Path
 from typing import List, Tuple
 
-import yaml
+from tour_guide import yaml_io
 
 import rclpy
 from turtlebot4_navigation.turtlebot4_navigator import (
@@ -36,7 +36,7 @@ def load_waypoints(path: str) -> List[Tuple[float, float]]:
     if not p.exists():
         raise FileNotFoundError(f"Sweep waypoint file not found: {path}")
     with open(p, "r") as f:
-        data = yaml.safe_load(f) or {}
+        data = yaml_io.safe_load(f) or {}
     raw = data.get("waypoints", [])
     return [(float(w["x"]), float(w["y"])) for w in raw]
 
